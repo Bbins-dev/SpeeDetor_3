@@ -54,6 +54,7 @@ public class PlayerMove : MonoBehaviour
     {
         if (other.CompareTag("Deadline"))
         {
+            Debug.Log("Deadline 충돌 감지됨"); // ← 테스트 로그용
             // 🔧 임시 처리: 시작 위치로 리셋
             transform.position = startPosition;
             rb.velocity = Vector2.zero;
