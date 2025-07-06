@@ -51,5 +51,5 @@
         "temp/": true,
         "Temp/": true
     },
-    "dotnet.defaultSolution": "SpeeDetor_0.sln"
+    "dotnet.defaultSolution": "SpeeDetor_3.sln"
 }
