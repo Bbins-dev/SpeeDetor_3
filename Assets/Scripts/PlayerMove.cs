@@ -11,11 +11,14 @@ public class PlayerMove : MonoBehaviour
     private bool isMoving = false;
 
     private Vector2 blockedDir = Vector2.zero;
+    private Vector3 startPosition;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0;
+
+        startPosition = transform.position; // 시작 위치 저장
     }
 
     void Update()
@@ -30,22 +33,35 @@ public class PlayerMove : MonoBehaviour
         else if (Input.GetKeyDown(KeyCode.RightArrow)) inputDir = Vector2.right;
         else return;
 
-        // 이전에 막힌 방향이면 무시
         if (inputDir == blockedDir) return;
 
         moveDir = inputDir;
-        blockedDir = Vector2.zero; // 이동 성공 시 제한 해제
+        blockedDir = Vector2.zero;
         isMoving = true;
         rb.velocity = moveDir * Speed;
     }
 
     void FixedUpdate()
     {
-        // 이동 중인데 속도가 거의 0이면, 부딪혔다고 판단
         if (isMoving && rb.velocity.magnitude < 0.01f)
         {
             isMoving = false;
-            blockedDir = moveDir; // 부딪힌 방향 저장
+            blockedDir = moveDir;
+        }
+    }
+
+    void OnTriggerEnter2D(Collider2D other)
+    {
+        if (other.CompareTag("Deadline"))
+        {
+            // 🔧 임시 처리: 시작 위치로 리셋
+            transform.position = startPosition;
+            rb.velocity = Vector2.zero;
+            isMoving = false;
+            blockedDir = Vector2.zero;
+
+            // 나중에 아래 라인을 게임 오버 UI로 교체
+            // GameOverUI.Show();
         }
     }
 }
