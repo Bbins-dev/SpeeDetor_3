@@ -27,7 +27,7 @@ public class PlayerMove : MonoBehaviour
 
         Vector2 inputDir = Vector2.zero;
 
-        if (Input.GetKeyDown(KeyCode.F)) inputDir = Vector2.up;
+        if (Input.GetKeyDown(KeyCode.T)) inputDir = Vector2.up;
         else if (Input.GetKeyDown(KeyCode.G)) inputDir = Vector2.down;
         else if (Input.GetKeyDown(KeyCode.J)) inputDir = Vector2.left;
         else if (Input.GetKeyDown(KeyCode.K)) inputDir = Vector2.right;
