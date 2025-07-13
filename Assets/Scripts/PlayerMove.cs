@@ -14,19 +14,31 @@ public class PlayerMove : MonoBehaviour
     [Header("콤보 입력 유예 시간")]
     public float ComboWindow = 0.2f;
 
+    [Header("색상 피드백")]
+    public SpriteRenderer spriteRenderer; // 플레이어 SpriteRenderer 참조
+    public Color comboSuccessColor = Color.green;
+    public Color comboFailColor = Color.red;
+    public float flashDuration = 0.2f;
+
     private Rigidbody2D rb;
     private Vector2 moveDir = Vector2.zero;
     private bool isMoving = false;
     private Vector2 blockedDir = Vector2.zero;
     private Vector3 startPosition;
 
-    private float lastWallHitTime = -999f; // 벽 충돌 시점 기록
+    private float lastWallHitTime = -999f;
+    private Color originalColor;
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0;
         startPosition = transform.position;
+
+        if (spriteRenderer == null)
+            spriteRenderer = GetComponentInChildren<SpriteRenderer>();
+
+        originalColor = spriteRenderer.color;
     }
 
     void Update()
@@ -43,18 +55,8 @@ public class PlayerMove : MonoBehaviour
 
         if (inputDir == blockedDir) return;
 
-        // 콤보 입력 반응 속도 측정
-        float timeSinceLastWall = Time.time - lastWallHitTime;
-        if (timeSinceLastWall <= ComboWindow)
-        {
-            Speed += SpeedIncrease;
-            Speed = Mathf.Min(Speed, MaxSpeed);
-        }
-        else
-        {
-            Speed -= SpeedPenalty;
-            Speed = Mathf.Max(Speed, MinSpeed);
-        }
+        // 🔽 콤보 판정 & 피드백 처리
+        HandleComboTiming();
 
         moveDir = inputDir;
         blockedDir = Vector2.zero;
@@ -80,8 +82,6 @@ public class PlayerMove : MonoBehaviour
             rb.velocity = Vector2.zero;
             isMoving = false;
             blockedDir = Vector2.zero;
-
-            // GameOverUI.Show(); ← 추후 UI 연결 예정
         }
     }
 
@@ -91,5 +91,32 @@ public class PlayerMove : MonoBehaviour
         {
             lastWallHitTime = Time.time;
         }
+    }
+
+    // 🔷 콤보 타이밍 판정 및 속도/색상 처리
+    void HandleComboTiming()
+    {
+        float timeSinceWall = Time.time - lastWallHitTime;
+
+        if (timeSinceWall <= ComboWindow)
+        {
+            Speed += SpeedIncrease;
+            Speed = Mathf.Min(Speed, MaxSpeed);
+            StartCoroutine(FlashColor(comboSuccessColor));
+        }
+        else
+        {
+            Speed -= SpeedPenalty;
+            Speed = Mathf.Max(Speed, MinSpeed);
+            StartCoroutine(FlashColor(comboFailColor));
+        }
+    }
+
+    // 🔷 색상 변경 후 원상 복귀 처리
+    IEnumerator FlashColor(Color flashColor)
+    {
+        spriteRenderer.color = flashColor;
+        yield return new WaitForSeconds(flashDuration);
+        spriteRenderer.color = originalColor;
     }
 }
