@@ -4,21 +4,29 @@ using UnityEngine;
 
 public class PlayerMove : MonoBehaviour
 {
+    [Header("이동 속도 조절")]
     public float Speed = 100f;
+    public float MinSpeed = 20f;
+    public float MaxSpeed = 300f;
+    public float SpeedIncrease = 50f;
+    public float SpeedPenalty = 50f;
+
+    [Header("콤보 입력 유예 시간")]
+    public float ComboWindow = 0.2f;
 
     private Rigidbody2D rb;
     private Vector2 moveDir = Vector2.zero;
     private bool isMoving = false;
-
     private Vector2 blockedDir = Vector2.zero;
     private Vector3 startPosition;
+
+    private float lastWallHitTime = -999f; // 벽 충돌 시점 기록
 
     void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         rb.gravityScale = 0;
-
-        startPosition = transform.position; // 시작 위치 저장
+        startPosition = transform.position;
     }
 
     void Update()
@@ -34,6 +42,19 @@ public class PlayerMove : MonoBehaviour
         else return;
 
         if (inputDir == blockedDir) return;
+
+        // 콤보 입력 반응 속도 측정
+        float timeSinceLastWall = Time.time - lastWallHitTime;
+        if (timeSinceLastWall <= ComboWindow)
+        {
+            Speed += SpeedIncrease;
+            Speed = Mathf.Min(Speed, MaxSpeed);
+        }
+        else
+        {
+            Speed -= SpeedPenalty;
+            Speed = Mathf.Max(Speed, MinSpeed);
+        }
 
         moveDir = inputDir;
         blockedDir = Vector2.zero;
@@ -54,15 +75,21 @@ public class PlayerMove : MonoBehaviour
     {
         if (other.CompareTag("Deadline"))
         {
-            Debug.Log("Deadline 충돌 감지됨"); // ← 테스트 로그용
-            // 🔧 임시 처리: 시작 위치로 리셋
+            Debug.Log("Deadline 충돌 감지됨");
             transform.position = startPosition;
             rb.velocity = Vector2.zero;
             isMoving = false;
             blockedDir = Vector2.zero;
 
-            // 나중에 아래 라인을 게임 오버 UI로 교체
-            // GameOverUI.Show();
+            // GameOverUI.Show(); ← 추후 UI 연결 예정
+        }
+    }
+
+    void OnCollisionEnter2D(Collision2D collision)
+    {
+        if (collision.gameObject.CompareTag("Wall"))
+        {
+            lastWallHitTime = Time.time;
         }
     }
 }
